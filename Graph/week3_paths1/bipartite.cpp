@@ -5,24 +5,24 @@
 using std::vector;
 using std::queue;
 
-int distance(vector<vector<int> > &adj, int s, int t) {
-  const int INF = -1;
-  vector <int> dis(adj.size(),INF);
-  dis[s]=0;
+int bipartite(vector<vector<int> > &adj) {
+  vector<int> visited(adj.size(),0);
   queue<int> q;
-  q.push(s);
+  q.push(0);
+  visited[0]=1;
   while(!q.empty()){
     int cur = q.front();
     q.pop();
     for(size_t i =0;i<adj[cur].size();i++){
       int next = adj[cur][i];
-      if(dis[next]==INF){
+      if(visited[next]==0){
         q.push(next);
-        dis[next]=dis[cur]+1;
-      }
+        visited[next]=-visited[cur];
+      }else if(visited[next]==visited[cur])
+      return 0;
     }
   }
-  return dis[t];
+  return 1;
 }
 
 int main() {
@@ -35,9 +35,6 @@ int main() {
     adj[x - 1].push_back(y - 1);
     adj[y - 1].push_back(x - 1);
   }
-  int s, t;
-  std::cin >> s >> t;
-  s--, t--;
-  std::cout << distance(adj, s, t);
+  std::cout << bipartite(adj);
   return 0;
 }
