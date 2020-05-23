@@ -1,4 +1,3 @@
-  
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -136,80 +135,62 @@ int max_flow(FlowGraph& graph, size_t from, size_t to)
 	return ret;
 }
 
-class MaxMatching {
+class StockCharts {
 	public:
-		void Solve()
-		{
-			vector<vector<bool>> adj_matrix = ReadData();
-			vector<int> matching = FindMatching(adj_matrix);
-
-			WriteResponse(matching);
+		void Solve() {
+			vector<vector<int>> stock_data = ReadData();
+			int result = MinCharts(stock_data);
+			WriteResponse(result);
 		}
 
 	private:
-		vector<vector<bool>> ReadData()
-		{
-			int num_left, num_right;
-			cin >> num_left >> num_right;
-			vector<vector<bool>> adj_matrix(num_left, vector<bool>(num_right));
-
-			for (int i = 0; i < num_left; ++i) {
-				for (int j = 0; j < num_right; ++j) {
-					int bit;
-					cin >> bit;
-					adj_matrix[i][j] = (bit == 1);
+		vector<vector<int>> ReadData() {
+			int num_stocks, num_points;
+			cin >> num_stocks >> num_points;
+			vector<vector<int>> stock_data(num_stocks, vector<int>(num_points));
+			for (int i = 0; i < num_stocks; ++i)
+				for (int j = 0; j < num_points; ++j) {
+					cin >> stock_data[i][j];
 				}
-			}
-
-			return adj_matrix;
+			return stock_data;
 		}
 
-		void WriteResponse(const vector<int>& matching)
-		{
-			for (int i = 0; i < matching.size(); ++i) {
-				if (i > 0) {
-					cout << " ";
-				}
-				if (matching[i] == -1) {
-					cout << "-1";
-				} else {
-					cout << (matching[i] + 1);
-				}
-			}
-			cout << "\n";
+		void WriteResponse(int result) {
+			cout << result << "\n";
 		}
 
-		vector<int> FindMatching(const vector<vector<bool>>& adj_matrix)
-		{
-			vector<int> matching;
-			int num_left = adj_matrix.size();
-			int num_right = adj_matrix[0].size();
-			int n = num_left + num_right + 2;
+		int MinCharts(const vector<vector<int>>& stock_data) {
+			int num_stocks = stock_data.size();
+			int n = 2*num_stocks + 2;
 			FlowGraph graph(n);
 			int source = 0;
 			int sink = n - 1;
 
-			for (int i = 0; i < num_left; i++) {
+			for (int i = 0; i < num_stocks; i++) {
 				graph.add_edge(source, i+1, 1);
 			}
 
-			for (int i = 0; i < num_left; i++) {
-				for (int j = 0; j < num_right; j++) {
-					if (adj_matrix[i][j]) {
-						graph.add_edge(i+1, j+num_left+1, 1);
+			for (int i = 0; i < num_stocks; i++) {
+				for (int j = 0; j < num_stocks; j++) {
+					const vector<int> &stock1 = stock_data[i];
+					const vector<int> &stock2 = stock_data[j];
+
+					if (compare(stock1, stock2)) {
+						graph.add_edge(i+1, j+num_stocks+1, 1);
 					}
 				}
 			}
 
-			for (int j = 0; j < num_right; j++) {
-				graph.add_edge(j+num_left+1, sink, 1);
+			for (int j = 0; j < num_stocks; j++) {
+				graph.add_edge(j+num_stocks+1, sink, 1);
 			}
 
 			max_flow(graph, source, sink);
 
-			for (int i = 0; i < num_left; i++) {
+			int cnt = 0;
+
+			for (int i = 0; i < num_stocks; i++) {
 				const vector<size_t> &edge_ids = graph.get_ids(i+1);
-				int match_id = -1;
 
 				for (size_t j = 0; j < edge_ids.size(); j++) {
 					const FlowGraph::Edge &edge = graph.get_edge(edge_ids[j]);
@@ -217,22 +198,27 @@ class MaxMatching {
 					if (edge.to == source) continue;
 					if (edge.flow <= 0) continue;
 
-					match_id = edge.to-num_left-1;
+					cnt++;
+					break;
 				}
-
-				matching.push_back(match_id);
 			}
 
-			return matching;
+			return num_stocks - cnt;
+		}
+
+		bool compare(const vector<int>& stock1, const vector<int>& stock2) {
+			for (int i = 0; i < stock1.size(); i++) {
+				if (stock1[i] >= stock2[i]) {
+					return false;
+				}
+			}
+			return true;
 		}
 };
 
-int main()
-{
+int main() {
 	ios_base::sync_with_stdio(false);
-	MaxMatching max_matching;
-
-	max_matching.Solve();
-
+	StockCharts stock_charts;
+	stock_charts.Solve();
 	return 0;
 }

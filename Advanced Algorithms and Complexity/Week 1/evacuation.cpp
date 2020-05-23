@@ -1,12 +1,12 @@
-  
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include <memory>
 #include <queue>
+#include <limits>
 
 using namespace std;
 
+/* This class implements a bit unusual scheme for storing edges of the graph,
+ * in order to retrieve the backward edge for a given edge quickly. */
 class FlowGraph {
 	public:
 		struct Edge {
@@ -59,6 +59,28 @@ class FlowGraph {
 		}
 };
 
+static FlowGraph read_data()
+{
+	int vertex_count, edge_count;
+	cin >> vertex_count >> edge_count;
+	FlowGraph graph(vertex_count);
+	for (int i = 0; i < edge_count; ++i) {
+		int u, v, capacity;
+		cin >> u >> v >> capacity;
+		graph.add_edge(u - 1, v - 1, capacity);
+	}
+
+	/*
+	FlowGraph graph(2);
+	graph.add_edge(1 - 1, 1 - 1, 10000);
+	graph.add_edge(1 - 1, 2 - 1, 1);
+	graph.add_edge(1 - 1, 2 - 1, 4);
+	graph.add_edge(1 - 1, 2 - 1, 100);
+	graph.add_edge(2 - 1, 1 - 1, 900);
+	*/
+
+	return graph;
+}
 
 int max_flow(FlowGraph& graph, size_t from, size_t to)
 {
@@ -136,103 +158,11 @@ int max_flow(FlowGraph& graph, size_t from, size_t to)
 	return ret;
 }
 
-class MaxMatching {
-	public:
-		void Solve()
-		{
-			vector<vector<bool>> adj_matrix = ReadData();
-			vector<int> matching = FindMatching(adj_matrix);
-
-			WriteResponse(matching);
-		}
-
-	private:
-		vector<vector<bool>> ReadData()
-		{
-			int num_left, num_right;
-			cin >> num_left >> num_right;
-			vector<vector<bool>> adj_matrix(num_left, vector<bool>(num_right));
-
-			for (int i = 0; i < num_left; ++i) {
-				for (int j = 0; j < num_right; ++j) {
-					int bit;
-					cin >> bit;
-					adj_matrix[i][j] = (bit == 1);
-				}
-			}
-
-			return adj_matrix;
-		}
-
-		void WriteResponse(const vector<int>& matching)
-		{
-			for (int i = 0; i < matching.size(); ++i) {
-				if (i > 0) {
-					cout << " ";
-				}
-				if (matching[i] == -1) {
-					cout << "-1";
-				} else {
-					cout << (matching[i] + 1);
-				}
-			}
-			cout << "\n";
-		}
-
-		vector<int> FindMatching(const vector<vector<bool>>& adj_matrix)
-		{
-			vector<int> matching;
-			int num_left = adj_matrix.size();
-			int num_right = adj_matrix[0].size();
-			int n = num_left + num_right + 2;
-			FlowGraph graph(n);
-			int source = 0;
-			int sink = n - 1;
-
-			for (int i = 0; i < num_left; i++) {
-				graph.add_edge(source, i+1, 1);
-			}
-
-			for (int i = 0; i < num_left; i++) {
-				for (int j = 0; j < num_right; j++) {
-					if (adj_matrix[i][j]) {
-						graph.add_edge(i+1, j+num_left+1, 1);
-					}
-				}
-			}
-
-			for (int j = 0; j < num_right; j++) {
-				graph.add_edge(j+num_left+1, sink, 1);
-			}
-
-			max_flow(graph, source, sink);
-
-			for (int i = 0; i < num_left; i++) {
-				const vector<size_t> &edge_ids = graph.get_ids(i+1);
-				int match_id = -1;
-
-				for (size_t j = 0; j < edge_ids.size(); j++) {
-					const FlowGraph::Edge &edge = graph.get_edge(edge_ids[j]);
-
-					if (edge.to == source) continue;
-					if (edge.flow <= 0) continue;
-
-					match_id = edge.to-num_left-1;
-				}
-
-				matching.push_back(match_id);
-			}
-
-			return matching;
-		}
-};
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
-	MaxMatching max_matching;
+	FlowGraph graph = read_data();
 
-	max_matching.Solve();
-
+	cout << max_flow(graph, 0, graph.size() - 1) << "\n";
 	return 0;
 }
